@@ -26,6 +26,7 @@ int green = 26;
 int blue = 28;
 
 String currentLine = "";            // string to hold the text from server
+unsigned long lastAttemptTime = 0;  // last time you connected to the server, in milliseconds
 
 // Initialize the Ethernet client library
 // with the IP address and port of the server
@@ -56,19 +57,7 @@ void setup() {
   Serial.println("IP address aquired.");
   Serial.println("connecting...");
 
-  // if you get a connection, report back via serial:
-  if (client.connect(server, server_port)) {
-    Serial.println("connected to server");
-    // Make a HTTP request:
-    client.println("GET / HTTP/1.0");
-    client.println();
-  } 
-  else {
-    // this could retry, but for now we just show error codes
-    // probably a wrong server IP address
-    Serial.println("server connection failed, check server and sever_port.");
-    error_server_connection();
-  }
+  makeRemoteRequest();
 }
 
 void loop()
@@ -112,6 +101,25 @@ void loop()
     while(true);
   }
   
+}
+
+void makeRemoteRequest() {
+  // attempt to connect, and wait a millisecond:
+  Serial.println("connecting to server...");
+  if (client.connect(server, server_port)) {
+    Serial.println("making HTTP request...");
+    // make HTTP GET request to twitter:
+    client.println("GET / HTTP/1.0");
+    client.println();
+  }
+  else {
+    // this could retry, but for now we just show error codes
+    // probably a wrong server IP address
+    Serial.println("server connection failed, check server and sever_port.");
+    error_server_connection();
+  }
+  // note the time of this connect attempt:
+  lastAttemptTime = millis();
 }
 
 // blink all the lights, just to be sure they work
