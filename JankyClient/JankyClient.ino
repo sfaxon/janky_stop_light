@@ -25,6 +25,8 @@ int yellow = 24;
 int green = 26;
 int blue = 28;
 
+String currentLine = "";            // string to hold the text from server
+
 // Initialize the Ethernet client library
 // with the IP address and port of the server
 EthernetClient client;
@@ -34,6 +36,7 @@ void setup() {
   pinMode(yellow, OUTPUT);
   pinMode(green, OUTPUT);
   pinMode(blue, OUTPUT);
+  currentLine.reserve(256);
   boot_blink();
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
@@ -74,6 +77,29 @@ void loop()
   // from the server, read them and print them:
   if (client.available()) {
     char c = client.read();
+    currentLine += c;
+    // clear currentLine when new line reached
+    if (c == '\n') {
+      currentLine = "";
+    }
+    
+    //really inefficient, but functional
+    if ( currentLine.equals("JANKY") ) {
+      Serial.println("found some JANKY code");
+      clear_lights();
+      digitalWrite(red, HIGH);
+    }
+    if ( currentLine.equals("GOOD") ) {
+      Serial.println("found some GOOD code");
+      clear_lights();
+      digitalWrite(green, HIGH);
+    }
+    if ( currentLine.equals("BUILDING") ) {
+      Serial.println("found some GOOD code");
+      clear_lights();
+      digitalWrite(yellow, HIGH);
+    }
+    
     Serial.print(c);
   }
 
