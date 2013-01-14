@@ -18,7 +18,6 @@
 byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 IPAddress server(10,0,1,187); // IP address of server
 int server_port = 1718;
-int server_retry_delay = 2000; // ms to wait between requests to server
 
 int red = 22;
 int yellow = 24;
@@ -26,7 +25,8 @@ int green = 26;
 int blue = 28;
 
 String currentLine = "";            // string to hold the text from server
-unsigned long lastAttemptTime = 0;  // last time you connected to the server, in milliseconds
+const unsigned long requestInterval = 10000;  // delay between requests
+unsigned long lastAttemptTime = 0;            // last time you connected to the server, in milliseconds
 
 // Initialize the Ethernet client library
 // with the IP address and port of the server
@@ -64,41 +64,41 @@ void loop()
 {
   // if there are incoming bytes available 
   // from the server, read them and print them:
-  if (client.available()) {
-    char c = client.read();
-    currentLine += c;
-    // clear currentLine when new line reached
-    if (c == '\n') {
-      currentLine = "";
+  if (client.connected()) {
+    if (client.available()) {
+      char c = client.read();
+      Serial.print(c);
+      currentLine += c;
+      // clear currentLine when new line reached
+      if (c == '\n') {
+        currentLine = "";
+      }
+      
+      //really inefficient, but functional
+      if ( currentLine.equals("JANKY") ) {
+        Serial.println("found some JANKY code");
+        clear_lights();
+        digitalWrite(red, HIGH);
+        client.stop();
+      }
+      if ( currentLine.equals("GOOD") ) {
+        Serial.println("found some GOOD code");
+        clear_lights();
+        digitalWrite(green, HIGH);
+        client.stop();
+      }
+      if ( currentLine.equals("BUILDING") ) {
+        Serial.println("found some GOOD code");
+        clear_lights();
+        digitalWrite(yellow, HIGH);
+        client.stop();
+      }
     }
-    
-    //really inefficient, but functional
-    if ( currentLine.equals("JANKY") ) {
-      Serial.println("found some JANKY code");
-      clear_lights();
-      digitalWrite(red, HIGH);
-    }
-    if ( currentLine.equals("GOOD") ) {
-      Serial.println("found some GOOD code");
-      clear_lights();
-      digitalWrite(green, HIGH);
-    }
-    if ( currentLine.equals("BUILDING") ) {
-      Serial.println("found some GOOD code");
-      clear_lights();
-      digitalWrite(yellow, HIGH);
-    }
-    
-    Serial.print(c);
   }
-
-  // if the server's disconnected, stop the client:
-  if (!client.connected()) {
-    Serial.println();
-    Serial.println("disconnecting.");
-    client.stop();
-    // do nothing forevermore:
-    while(true);
+  else if (millis() - lastAttemptTime > requestInterval) {
+    // if you're not connected, and two minutes have passed since
+    // your last connection, then attempt to connect again:
+    makeRemoteRequest();
   }
   
 }
