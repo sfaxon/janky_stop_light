@@ -15,9 +15,9 @@
 
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
-byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress server(10,0,1,187); // IP address of server
-int server_port = 1718;
+byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x1D };
+IPAddress server(66, 150, 174, 219); // IP address of server
+int server_port = 80;
 
 int red = 22;
 int yellow = 24;
@@ -88,7 +88,7 @@ void loop()
         client.stop();
       }
       if ( currentLine.equals("BUILDING") ) {
-        Serial.println("found some GOOD code");
+        Serial.println("found BUILDING code");
         clear_lights();
         digitalWrite(yellow, HIGH);
         client.stop();
@@ -109,7 +109,8 @@ void makeRemoteRequest() {
   if (client.connect(server, server_port)) {
     Serial.println("making HTTP request...");
     // make HTTP GET request to twitter:
-    client.println("GET / HTTP/1.0");
+    client.println("GET / HTTP/1.1");
+    client.println("HOST: buildlight.marshill.info");
     client.println();
   }
   else {
@@ -179,5 +180,4 @@ void error_server_connection()
   clear_lights();
   digitalWrite(blue, HIGH);
   digitalWrite(yellow, HIGH);
-  while(true);
 }
