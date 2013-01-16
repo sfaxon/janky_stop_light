@@ -16,6 +16,12 @@
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
 byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x1D };
+// only if DHCP fails do we assign a static IP address
+IPAddress staticIp(10, 11, 18, 100);
+IPAddress staticDns(10, 11, 18, 10);
+IPAddress staticGateway(10, 11, 18, 1);
+IPAddress staticSubnet(255, 255, 255, 0);
+
 IPAddress server(66, 150, 174, 219); // IP address of server
 int server_port = 80;
 
@@ -51,7 +57,12 @@ void setup() {
     Serial.println("Failed to configure Ethernet using DHCP");
     // no point in carrying on, show error status on lights
     error_dhcp();
+    Ethernet.begin(mac, staticIp, staticDns, staticGateway, staticSubnet);
+    Serial.println("Set static IP address");
   }
+  
+  Serial.println(Ethernet.localIP());
+
   // give the Ethernet shield a second to initialize:
   delay(1000);
   Serial.println("IP address aquired.");
@@ -172,7 +183,8 @@ void error_dhcp()
   clear_lights();
   digitalWrite(blue, HIGH);
   digitalWrite(red, HIGH);
-  while(true);
+  delay(400);
+  clear_lights();
 }
 
 void error_server_connection()
